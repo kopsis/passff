@@ -516,7 +516,7 @@ PassFF.Pass = {
   },
 
   getDirectEnvParams: function() {
-    var params = { 'PATH': PassFF.Preferences.path };
+    var params = { 'PATH': PassFF.Preferences.path.replace(/\\/g, "/") };
 
     if (PassFF.Preferences.storeDir.trim().length > 0) {
       params['PASSWORD_STORE_DIR'] = PassFF.Preferences.storeDir;

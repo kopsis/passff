@@ -9,6 +9,7 @@ def getMessage():
         sys.exit(0)
     messageLength = struct.unpack('@I', rawLength)[0]
     message = sys.stdin.buffer.read(messageLength).decode("utf-8")
+    debugLog('>', message)
     return json.loads(message)
 
 # Encode a message for transmission, given its content.
@@ -19,15 +20,25 @@ def encodeMessage(messageContent):
 
 # Send an encoded message to stdout.
 def sendMessage(encodedMessage):
+    debugLog('<', encodedMessage['content'])
     sys.stdout.buffer.write(encodedMessage['length'])
     sys.stdout.write(encodedMessage['content'])
     sys.stdout.flush()
+
+def debugLog(mtype, text):
+    if logfile != None:
+        logfile.write(mtype + ' ')
+        logfile.write(text)
+        logfile.write('\n')
+
+logfile = None
+#logfile = open('passff_py.log', 'a')
 
 receivedMessage = getMessage()
 env = dict(os.environ)
 if "HOME" not in env:
     env["HOME"] = os.path.expanduser('~')
-if receivedMessage['command'][-4:] == "pass":
+if receivedMessage['command'][-4:] == "pass" or receivedMessage['command'][-8:] == "bash.exe":
     for key, val in receivedMessage['environment'].items():
         env[key] = val
     cmd = [receivedMessage['command']] + receivedMessage['arguments']
@@ -38,6 +49,7 @@ if receivedMessage['command'][-4:] == "pass":
     }
     if 'stdin' in receivedMessage:
       proc_params['stdin'] = subprocess.PIPE
+    debugLog('*', json.dumps(cmd))
     proc = subprocess.Popen(cmd, **proc_params)
     if 'stdin' in receivedMessage:
       proc_in = bytes(receivedMessage['stdin'], receivedMessage['charset'])
